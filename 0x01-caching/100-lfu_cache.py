@@ -33,11 +33,17 @@ class LFUCache(BaseCaching):
                 to_discard = [
                     key for key, value in self.access_frequency.items() if value == min_frequency]
 
-                for key, _ in self.access_frequency.items():
-                    if key in to_discard:
-                        least_used_item_key = key
-                        break
+                to_discard_dict = {}
 
+                for index, (key, _) in enumerate(self.access_frequency.items()):
+                    if key in to_discard:
+                        to_discard_dict[key] = index
+
+                to_discard_dict_sortd = dict(
+                    sorted(to_discard_dict.items(), key=lambda x: x[1]))
+                unlucky_item = next(iter(to_discard_dict_sortd))
+
+                least_used_item_key = unlucky_item
                 least_used_item_key = next(iter(self.cache_data))
                 self.cache_data.pop(least_used_item_key)
                 self.access_frequency.pop(least_used_item_key)
