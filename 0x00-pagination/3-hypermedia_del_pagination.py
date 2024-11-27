@@ -52,7 +52,7 @@ class Server:
                          for index in range(index, index + page_size)]
 
         response = {
-            "index": index + page_size - 1,
+            "index": index,
             "next_index": index + page_size,
             "page_size": len(response_data),
             "data": response_data
