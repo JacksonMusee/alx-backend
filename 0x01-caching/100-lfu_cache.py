@@ -2,68 +2,57 @@
 """LFU cache module
 """
 
+from collections import defaultdict
 from base_caching import BaseCaching
 
 
 class LFUCache(BaseCaching):
-    """LFU cache class
-    """
+    """LFU cache class"""
 
     def __init__(self):
-        """Initialize
-        """
+        """Initialize"""
         super().__init__()
-        self.access_frequency = {}
+        self.access_frequency = defaultdict(int)
+        self.key_order = defaultdict(list)
+        self.min_freq = 0
 
-    def sort(self):
-        """Sorts access_frequency in ascending order
-        """
-        sorted_frequency = sorted(
-            self.access_frequency.items(), key=lambda x: x[1])
-        self.access_frequency = dict(sorted_frequency)
+    def _update_frequency(self, key):
+        """Helper to update the frequency of a key"""
+        old_freq = self.access_frequency[key]
+        new_freq = old_freq + 1
+
+        self.access_frequency[key] = new_freq
+
+        self.key_order[new_freq].append(key)
+
+        self.key_order[old_freq].remove(key)
+
+        if not self.key_order[old_freq]:
+            del self.key_order[old_freq]
+            if old_freq == self.min_freq:
+                self.min_freq += 1
 
     def put(self, key, item):
-        """Add items to cache
-        """
-        if key and item:
-            if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
-                first_item = next(iter(self.access_frequency))
-                min_frequency = self.access_frequency[first_item]
+        """Add items to cache"""
+        if key is None or item is None:
+            return
 
-                to_discard = [
-                    key for key, value in self.access_frequency.items() if value == min_frequency]
+        if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
+            least_freq_key = self.key_order[self.min_freq].pop(0)
+            self.cache_data.pop(least_freq_key)
+            self.access_frequency.pop(least_freq_key)
+            print(f"DISCARD: {least_freq_key}")
 
-                to_discard_dict = {}
-
-                for index, (key, _) in enumerate(self.access_frequency.items()):
-                    if key in to_discard:
-                        to_discard_dict[key] = index
-
-                to_discard_dict_sortd = dict(
-                    sorted(to_discard_dict.items(), key=lambda x: x[1]))
-                unlucky_item = next(iter(to_discard_dict_sortd))
-
-                least_used_item_key = unlucky_item
-                self.cache_data.pop(least_used_item_key)
-                self.access_frequency.pop(least_used_item_key)
-                print(f"DISCARD: {least_used_item_key}")
-
-            self.cache_data[key] = item
-            self.access_frequency[key] = 1
-            self.sort()
+        self.cache_data[key] = item
+        self.access_frequency[key] = 1
+        self.key_order[1].append(key)
+        self.min_freq = 1
 
     def get(self, key):
-        """Retrieves a record from cache
-        """
-        if not key:
+        """Retrieves a record from cache"""
+        if key is None or key not in self.cache_data:
             return None
 
-        result = self.cache_data.get(key)
+        self._update_frequency(key)
 
-        if result:
-            poped_value = self.cache_data.pop(key)
-            self.cache_data[key] = poped_value
-            self.access_frequency[key] += 1
-            self.sort()
-
-        return result
+        return self.cache_data[key]
