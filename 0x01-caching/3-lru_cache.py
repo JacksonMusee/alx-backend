@@ -34,7 +34,7 @@ class LRUCache(BaseCaching):
         result = self.cache_data.get(key)
 
         if result:
-            poped_key, poped_value = self.cache_data.pop(key)
-            self.cache_data[poped_key] = poped_value
+            poped_value = self.cache_data.pop(key)
+            self.cache_data[key] = poped_value
 
         return result
