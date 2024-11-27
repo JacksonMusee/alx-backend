@@ -15,6 +15,13 @@ class LFUCache(BaseCaching):
         super().__init__()
         self.access_frequency = {}
 
+    def sort(self):
+        """Sorts access_frequency in ascending order
+        """
+        sorted_frequency = sorted(
+            self.access_frequency.items(), key=lambda x: x[1])
+        self.access_frequency = dict(sorted_frequency)
+
     def put(self, key, item):
         """Add items to cache
         """
@@ -38,6 +45,7 @@ class LFUCache(BaseCaching):
 
             self.cache_data[key] = item
             self.access_frequency[key] = 1
+            self.sort()
 
     def get(self, key):
         """Retrieves a record from cache
@@ -51,9 +59,6 @@ class LFUCache(BaseCaching):
             poped_value = self.cache_data.pop(key)
             self.cache_data[key] = poped_value
             self.access_frequency[key] += 1
-
-            sorted_frequency = sorted(
-                self.access_frequency.items(), key=lambda x: x[1])
-            self.access_frequency = dict(sorted_frequency)
+            self.sort()
 
         return result
