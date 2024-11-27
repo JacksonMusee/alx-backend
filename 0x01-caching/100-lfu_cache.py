@@ -44,7 +44,6 @@ class LFUCache(BaseCaching):
                 unlucky_item = next(iter(to_discard_dict_sortd))
 
                 least_used_item_key = unlucky_item
-                least_used_item_key = next(iter(self.cache_data))
                 self.cache_data.pop(least_used_item_key)
                 self.access_frequency.pop(least_used_item_key)
                 print(f"DISCARD: {least_used_item_key}")
